@@ -21,7 +21,9 @@ app.use(express.urlencoded({ extended: true}))
 //routers
 const router = require("./routes/pollRouter");
 app.use("/poll", router);
-// //hier kommt auch router für vote router
+const voteRouter = require("./routes/voteRouter");
+app.use("/vote", voteRouter);
+
 
 // PORT
 const PORT = process.env.PORT || 8080;

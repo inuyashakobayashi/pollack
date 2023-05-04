@@ -5,7 +5,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       }
     });
-  
     return Poll_option;
   };
   

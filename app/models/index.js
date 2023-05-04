@@ -27,23 +27,33 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-// db.tutorials = require("./tutorial.model.js")(sequelize, Sequelize);
-// db.comments = require("./comment.model.js")(sequelize, Sequelize);
-
-// db.tutorials.hasMany(db.comments, { as: "comments" });
-// db.comments.belongsTo(db.tutorials, {
-//   foreignKey: "tutorialId",
-//   as: "tutorial",
-// });
-
 
 db.tokens = require("./token.model.js")(sequelize, DataTypes);
-
+db.users = require("./user.model.js")(sequelize, DataTypes);
+db.votes = require("./vote.model.js")(sequelize, DataTypes);
 db.polls = require("./poll.model.js")(sequelize, DataTypes);
 db.polls_settings = require("./poll_setting.model.js")(sequelize, DataTypes);
 db.polls_options = require("./poll_option.model.js")(sequelize, DataTypes);
 
-// Define the relationships between the poll, poll_setting, and poll_option tables
+// Define the relationships between users and votes with each other and others
+db.users.hasMany(db.votes, { as: 'votes' });
+db.votes.belongsTo(db.users, {
+  foreignKey: 'user_id',
+  as: 'user'
+});
+
+db.polls.hasMany(db.votes, { as: 'votes' });
+db.votes.belongsTo(db.polls, {
+  foreignKey: 'poll_id',
+  as: 'poll'
+});
+
+db.polls_options.hasMany(db.votes, { as: 'votes' });
+db.votes.belongsTo(db.polls_options, {
+  foreignKey: 'poll_option_id',
+  as: 'poll_option'
+});
+
 db.polls.hasMany(db.tokens, {as: 'tokens'});
 db.tokens.belongsTo(db.polls, {
   foreignKey: 'poll_id',

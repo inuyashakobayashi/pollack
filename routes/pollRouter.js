@@ -5,8 +5,6 @@ const express = require("express");
 
 router.post("/lack", pollController.addPoll);
 
-
-
 router.get("/lack/:token", pollController.getPollStatistics);
 
 router.put("/lack/:token", pollController.updatePoll);
