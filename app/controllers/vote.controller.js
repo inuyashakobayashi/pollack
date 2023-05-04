@@ -50,10 +50,13 @@ const addVote = async (req, res) => {
   }
 };
 
-//Find the vote of the token
+// Find the vote of the token
 const findVote = async (req, res) => {
-    res.send("Hallo from vote");
+  //! Nach dem ich in obere Methode ein Vote erstellt habe, muss ich edit token in ein weitere Table speichrn, 
+  //! um danach in dieser Methode das benutzen kann. Diese Token wird benutzt, um später diese Vote ändern kann.
+  //! Ich kann das auch in Token model speichern. dafür muss ich ein weitere Zeile mit user_id erstellen, um zu wissen, zu welcher User gehört.
 };
+
 
 //Update a vote of the token
 const updateVote = async (req, res) => {
