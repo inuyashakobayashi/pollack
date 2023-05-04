@@ -7,7 +7,7 @@ router.post("/lack", pollController.addPoll);
 
 
 
-// router.get("/lack/:token", pollController.addPoll);
+router.get("/lack/:token", pollController.getPollStatistics);
 
 router.put("/lack/:token", pollController.updatePoll);
 

@@ -154,7 +154,50 @@ const deletePoll = async (req, res) => {
       });
     }
   };
+
+  
+  const getPollStatistics = async (req, res) => {
+    const tokenValue = req.params.token;
+  
+    try {
+      const token = await Token.findOne({
+        where: { value: tokenValue, link: "share" }
+      });
+  
+      if (!token) {
+        res.status(404).send({ code: 404, message: "Poll not found." });
+        return;
+      }
+  
+      const pollId = token.poll_id;
+  
+      const poll = await Poll.findOne({
+        where: { id: pollId },
+        include: [Poll_option, Poll_setting]
+      });
+  
+      // Fetch participants and options with their votes
+      // You may need to adjust the following lines based on your database schema
+      const participants = []; // Fetch participants from your database
+      const options = []; // Fetch options with their votes from your database
+  
+      res.status(200).send({
+        poll: {
+          body: poll,
+          share: {
+            link: "share",
+            value: token.value
+          }
+        },
+        participants,
+        options
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ code: 500, message: "Internal server error" });
+    }
+  };
   
 
 
-module.exports = { addPoll, updatePoll, deletePoll }
+module.exports = { addPoll, updatePoll, deletePoll, getPollStatistics }
