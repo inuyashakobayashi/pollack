@@ -249,6 +249,88 @@ const deletePoll = async (req, res) => {
   //     res.status(500).send({ code: 500, message: "Internal server error" });
   //   }
   // };
+  // const getPollStatistics = async (req, res) => {
+  //   const tokenValue = req.params.token;
+  
+  //   try {
+  //     const token = await Token.findOne({
+  //       where: { value: tokenValue, token_type: "share" },
+  //     });
+  
+  //     if (!token) {
+  //       res.status(404).send({ code: 404, message: "Poll not found." });
+  //       return;
+  //     }
+  
+  //     const pollId = token.poll_id;
+  
+  //     const poll = await Poll.findOne({
+  //       where: { id: pollId },
+  //       include: [
+  //         {
+  //           model: db.polls_options,
+  //           as: "options",
+  //         },
+  //         {
+  //           model: db.polls_settings,
+  //           as: "setting",
+  //         },
+  //       ],
+  //     });
+  
+  //     // Fetch participants, options with their votes, and worst votes
+  //     const participants = await db.users.findAll({
+  //       where: {
+  //         id: {
+  //           [db.Sequelize.Op.in]: db.sequelize.literal(`(SELECT DISTINCT user_id FROM votes WHERE poll_id = ${pollId})`),
+  //         },
+  //       },
+  //       raw: true,
+  //     });
+  
+  //     const options = await db.polls_options.findAll({
+  //       where: { poll_id: pollId },
+  //       include: [
+  //         {
+  //           model: db.votes,
+  //           as: "votes",
+  //           where: { poll_id: pollId, worst: false },
+  //           required: false,
+  //           attributes: ["user_id"],
+  //         },
+  //         {
+  //           model: db.votes,
+  //           as: "worst_votes",
+  //           where: { poll_id: pollId, worst: true },
+  //           required: false,
+  //           attributes: ["user_id"],
+  //         },
+  //       ],
+  //     });
+  
+  //     const formattedOptions = options.map((option) => ({
+  //       id: option.id,
+  //       text: option.text,
+  //       voted: option.votes.map((vote) => vote.user_id),
+  //       worst: option.worst_votes.map((worstVote) => worstVote.user_id),
+  //     }));
+  
+  //     res.status(200).send({
+  //       poll: {
+  //         body: poll,
+  //         share: {
+  //           link: "share",
+  //           value: token.value,
+  //         },
+  //       },
+  //       participants,
+  //       options: formattedOptions,
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).send({ code: 500, message: "Internal server error" });
+  //   }
+  // };
   const getPollStatistics = async (req, res) => {
     const tokenValue = req.params.token;
   
@@ -317,13 +399,22 @@ const deletePoll = async (req, res) => {
   
       res.status(200).send({
         poll: {
-          body: poll,
+          body: {
+            title: poll.title,
+            description: poll.description,
+            options: poll.options.map((option) => ({
+              id: option.id,
+              text: option.text,
+            })),
+            setting: poll.setting,
+            fixed: [], // You need to provide the fixed options data here
+          },
           share: {
             link: "share",
             value: token.value,
           },
         },
-        participants,
+        participants: participants.map((participant) => ({ name: participant.name })),
         options: formattedOptions,
       });
     } catch (error) {
