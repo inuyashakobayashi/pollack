@@ -3,6 +3,8 @@ const Poll = db.polls;
 const Poll_setting = db.polls_settings;
 const Poll_option = db.polls_options;
 const Token = db.tokens;
+const Vote = db.votes;
+
 const crypto = require("crypto");
 
 // Create and Save new Polls
@@ -158,12 +160,101 @@ const deletePoll = async (req, res) => {
   };
 
   
+  // const getPollStatistics = async (req, res) => {
+  //   const tokenValue = req.params.token;
+  
+  //   try {
+  //     const token = await Token.findOne({
+  //       where: { value: tokenValue, token_type: "share" },
+  //     });
+  
+  //     if (!token) {
+  //       res.status(404).send({ code: 404, message: "Poll not found." });
+  //       return;
+  //     }
+  
+  //     const pollId = token.poll_id;
+  
+  //     const poll = await Poll.findOne({
+  //       where: { id: pollId },
+  //       include: [Poll_option, Poll_setting],
+  //     });
+  
+  //     // Fetch participants, options with their votes, and worst votes
+  //     const participants = await db.users.findAll({
+  //       where: { id: { [db.Sequelize.Op.in]: db.sequelize.literal(`(SELECT DISTINCT user_id FROM votes WHERE poll_id = ${pollId})`) } },
+  //       raw: true,
+  //     });
+
+  //     const options = await db.polls_options.findAll({
+  //       where: { poll_id: pollId },
+  //       include: [
+  //         {
+  //           model: db.votes,
+  //           as: 'votes',
+  //           where: { poll_id: pollId, worst: false },
+  //           required: false,
+  //           attributes: ['user_id'],
+  //         },
+  //         {
+  //           model: db.votes,
+  //           as: 'worst_votes',
+  //           where: { poll_id: pollId, worst: true },
+  //           required: false,
+  //           attributes: ['user_id'],
+  //         },
+  //       ],
+  //     });
+  
+  //     // const options = await db.polls_options.findAll({
+  //     //   where: { poll_id: pollId },
+  //     //   include: [
+  //     //     {
+  //     //       model: Vote,
+  //     //       as: 'votes',
+  //     //       where: { poll_id: pollId, worst: false },
+  //     //       required: false,
+  //     //       attributes: ['user_id'],
+  //     //     },
+  //     //     {
+  //     //       model: Vote,
+  //     //       as: 'worst_votes',
+  //     //       where: { poll_id: pollId, worst: true },
+  //     //       required: false,
+  //     //       attributes: ['user_id'],
+  //     //     },
+  //     //   ],
+  //     // });
+  
+  //     const formattedOptions = options.map(option => ({
+  //       id: option.id,
+  //       text: option.text,
+  //       voted: option.votes.map(vote => vote.user_id),
+  //       worst: option.worst_votes.map(worstVote => worstVote.user_id),
+  //     }));
+  
+  //     res.status(200).send({
+  //       poll: {
+  //         body: poll,
+  //         share: {
+  //           link: "share",
+  //           value: token.value,
+  //         },
+  //       },
+  //       participants,
+  //       options: formattedOptions,
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).send({ code: 500, message: "Internal server error" });
+  //   }
+  // };
   const getPollStatistics = async (req, res) => {
     const tokenValue = req.params.token;
   
     try {
       const token = await Token.findOne({
-        where: { value: tokenValue, link: "share" } //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
+        where: { value: tokenValue, token_type: "share" },
       });
   
       if (!token) {
@@ -175,31 +266,72 @@ const deletePoll = async (req, res) => {
   
       const poll = await Poll.findOne({
         where: { id: pollId },
-        include: [Poll_option, Poll_setting]
+        include: [
+          {
+            model: db.polls_options,
+            as: "options",
+          },
+          {
+            model: db.polls_settings,
+            as: "setting",
+          },
+        ],
       });
   
-      //! Es muss noch implementiert werden
-      // Fetch participants and options with their votes
-      // You may need to adjust the following lines based on your database schema
-      const participants = []; // Fetch participants from your database
-      const options = []; // Fetch options with their votes from your database
+      // Fetch participants, options with their votes, and worst votes
+      const participants = await db.users.findAll({
+        where: {
+          id: {
+            [db.Sequelize.Op.in]: db.sequelize.literal(`(SELECT DISTINCT user_id FROM votes WHERE poll_id = ${pollId})`),
+          },
+        },
+        raw: true,
+      });
+  
+      const options = await db.polls_options.findAll({
+        where: { poll_id: pollId },
+        include: [
+          {
+            model: db.votes,
+            as: "votes",
+            where: { poll_id: pollId, worst: false },
+            required: false,
+            attributes: ["user_id"],
+          },
+          {
+            model: db.votes,
+            as: "worst_votes",
+            where: { poll_id: pollId, worst: true },
+            required: false,
+            attributes: ["user_id"],
+          },
+        ],
+      });
+  
+      const formattedOptions = options.map((option) => ({
+        id: option.id,
+        text: option.text,
+        voted: option.votes.map((vote) => vote.user_id),
+        worst: option.worst_votes.map((worstVote) => worstVote.user_id),
+      }));
   
       res.status(200).send({
         poll: {
           body: poll,
           share: {
             link: "share",
-            value: token.value
-          }
+            value: token.value,
+          },
         },
         participants,
-        options
+        options: formattedOptions,
       });
     } catch (error) {
       console.log(error);
       res.status(500).send({ code: 500, message: "Internal server error" });
     }
   };
+  
   
 
 
