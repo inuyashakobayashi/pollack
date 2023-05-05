@@ -5,6 +5,9 @@ module.exports = (sequelize, DataTypes) => {
       },
       value: {
         type: DataTypes.STRING
+      },
+      token_type: {
+        type: DataTypes.STRING
       }
     }); 
     return Token;

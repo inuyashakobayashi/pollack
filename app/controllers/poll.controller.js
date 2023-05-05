@@ -44,13 +44,15 @@ const addPoll = async (req, res) => {
         const adminToken = await Token.create({
             link: "admin",
             value: adminTokenValue,
-            poll_id: poll.id
+            poll_id: poll.id,
+            token_type: "admin"
         })
 
         const shareToken = await Token.create({
             link: "share",
             value: shareTokenValue,
-            poll_id: poll.id
+            poll_id: poll.id,
+            token_type: "share"
         })
 
         res.status(200).send({
@@ -75,7 +77,7 @@ const updatePoll = async (req, res) => {
 
     try {
         const token = await Token.findOne({
-            where: { value: tokenValue, link: "admin" }
+            where: { value: tokenValue, link: "admin" } //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
         });
 
         if (!token) {
@@ -124,7 +126,7 @@ const deletePoll = async (req, res) => {
       const token = await Token.findOne({
         where: {
           value: tokenValue,
-          link: 'admin',
+          link: 'admin', //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
         },
       });
   
@@ -161,7 +163,7 @@ const deletePoll = async (req, res) => {
   
     try {
       const token = await Token.findOne({
-        where: { value: tokenValue, link: "share" }
+        where: { value: tokenValue, link: "share" } //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
       });
   
       if (!token) {
@@ -176,6 +178,7 @@ const deletePoll = async (req, res) => {
         include: [Poll_option, Poll_setting]
       });
   
+      //! Es muss noch implementiert werden
       // Fetch participants and options with their votes
       // You may need to adjust the following lines based on your database schema
       const participants = []; // Fetch participants from your database
