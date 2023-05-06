@@ -3,7 +3,7 @@ const router = require("express").Router();
 const express = require("express");
 
 
-router.post("/lack", pollController.addPoll);
+router.post("/lack",pollController.pollValidationRules, pollController.addPoll);
 
 router.get("/lack/:token", pollController.getPollStatistics);
 
