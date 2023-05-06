@@ -13,7 +13,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/addPoll" element={<AddPoll />} />
-        <Route path="/addVote" element={<AddVote />} />
+        <Route path="/addVote/:token" element={<AddVote />} />
         <Route path="/showPolls" element={<ShowPolls />} />
       </Routes>
     </Router>
