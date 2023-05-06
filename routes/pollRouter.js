@@ -1,14 +1,14 @@
-const pollController = require("../app/controllers/poll.controller.js");
+// const pollController = require("../app/controllers/poll.controller.js");
 const router = require("express").Router();
-const express = require("express");
+const {addPoll, getPollStatistics, updatePoll, deletePoll, pollValidationRules} = require("../app/controllers/poll.controller.js");
 
 
-router.post("/lack",pollController.pollValidationRules, pollController.addPoll);
+router.post("/lack",pollValidationRules, addPoll);
 
-router.get("/lack/:token", pollController.getPollStatistics);
+router.get("/lack/:token", getPollStatistics);
 
-router.put("/lack/:token", pollController.updatePoll);
+router.put("/lack/:token", updatePoll);
 
-router.delete("/lack/:token", pollController.deletePoll);
+router.delete("/lack/:token", deletePoll);
 
 module.exports = router;
