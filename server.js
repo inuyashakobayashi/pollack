@@ -5,7 +5,7 @@ const app = express();
 
 
 const corOptions = {
-  origin: 'http://localhost:49715'
+  origin: 'http://localhost:3000'
 }
 
 
