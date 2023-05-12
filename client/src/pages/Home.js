@@ -7,28 +7,18 @@ import React from 'react';
 function Home() {
 
   return (
-    <div>Home
+    <div>
+      <h1>Home</h1>
       <br/>
 
       <Link to='/poll'>
         <button >Poll</button>
       </Link>
 
-    <br/>
+    <br/> <br/>
     <Link to='/vote'>
         <button >Vote</button>
       </Link>
-
-      {/* <Link to='/addPoll'>
-        <button >new poll</button>
-      </Link>
-
-      <Link to='/showPolls'>
-        <button>show polls</button>
-      </Link>
-      <hr/>
-
-      <EnterToken/> */}
 
     </div>
   )

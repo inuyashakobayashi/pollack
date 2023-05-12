@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import PollList from './PollList'
 function Poll() {
   return (
-    <div>Everything about Poll
+    <Container>Everything about Poll
         <br />
         <Link to='/addPoll'>
         <button >new poll</button>
@@ -12,12 +12,10 @@ function Poll() {
       <hr/>
 
       <Container>
-        Show all Polls:
-        <br/>
         <PollList />
       </Container>
 
-    </div>
+    </Container>
   )
 }
 

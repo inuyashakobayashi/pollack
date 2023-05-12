@@ -7,6 +7,8 @@ import AddVote from './pages/AddVote';
 import ShowPolls from './pages/ShowPolls';
 import Poll from './pages/Poll';
 import Vote from './pages/Vote';
+import PollDetail from './pages/PollDetail'
+import PollUpdate from './pages/PollUpdate';
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path='/poll' element={<Poll/>} />
         <Route path='/vote' element={<Vote/>} />
+        <Route path='/poll/:token' element={<PollDetail />} />
+        <Route path='/poll-update/:token' element={<PollUpdate />} />
         <Route path="/addPoll" element={<AddPoll />} />
         <Route path="/addVote/:token" element={<AddVote />} />
         <Route path="/showPolls" element={<ShowPolls />} />
