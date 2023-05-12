@@ -93,76 +93,6 @@ const addPoll = async (req, res) => {
 };
 
 
-// Create and Save new Polls
-// const addPoll = async (req, res) => {
-
-//     let pollBody = {
-//         title: req.body.title,
-//         description: req.body.description,
-//         options: req.body.options,
-//         setting: req.body.setting,
-//         fixed: req.body.fixed
-//     }
-
-//     try {
-//         const poll = await Poll.create({
-//             title: pollBody.title,
-//             description: pollBody.description,
-//             fixed: pollBody.fixed
-//         })
-    
-//         const poll_options = pollBody.options.map(option => {
-//             return Poll_option.create({
-//                 text: option.text,
-//                 poll_id: poll.id,
-//             })
-//         })
-    
-//         const poll_setting = Poll_setting.create({
-//             voices: pollBody.setting.voices,
-//             worst: pollBody.setting.worst,
-//             deadline: pollBody.setting.deadline,
-//             poll_id: poll.id
-//         })
-//         // Generate a random string for the admin link and share link
-//         const adminTokenValue = crypto.randomBytes(16).toString("hex");
-//         const shareTokenValue = crypto.randomBytes(16).toString("hex");
-
-//         // Create tokens for the admin link and share link
-//         const adminToken = await Token.create({
-//             link: "admin",
-//             value: adminTokenValue,
-//             poll_id: poll.id,
-//             token_type: "admin"
-//         })
-
-//         const shareToken = await Token.create({
-//             link: "share",
-//             value: shareTokenValue,
-//             poll_id: poll.id,
-//             token_type: "share"
-//         })
-
-//         res.status(200).send({
-//             admin: {
-//                 link: "admin",
-//                 value: adminToken.value
-//             },
-//             share: {
-//                 link: "share",
-//                 value: shareToken.value
-//             }
-//         });
-
-//       } catch (error) {
-//         console.log(error);
-//         res.status(500).send({
-//           code: 500,
-//           message: 'Internal server error'
-//         });
-//       }
-// };
-
 const updatePoll = async (req, res) => {
     const tokenValue = req.params.token;
     const pollBody = req.body;
@@ -249,97 +179,6 @@ const deletePoll = async (req, res) => {
     }
   };
 
-  // const getPollStatistics = async (req, res) => {
-  //   const tokenValue = req.params.token;
-  
-  //   try {
-  //     const token = await Token.findOne({
-  //       where: { value: tokenValue, token_type: "share" },
-  //     });
-  
-  //     if (!token) {
-  //       res.status(404).send({ code: 404, message: "Poll not found." });
-  //       return;
-  //     }
-  
-  //     const pollId = token.poll_id;
-  
-  //     const poll = await Poll.findOne({
-  //       where: { id: pollId },
-  //       include: [
-  //         {
-  //           model: db.polls_options,
-  //           as: "options",
-  //         },
-  //         {
-  //           model: db.polls_settings,
-  //           as: "setting",
-  //         },
-  //       ],
-  //     });
-  
-  //     // Fetch participants, options with their votes, and worst votes
-  //     const participants = await db.users.findAll({
-  //       where: {
-  //         id: {
-  //           [db.Sequelize.Op.in]: db.sequelize.literal(`(SELECT DISTINCT user_id FROM votes WHERE poll_id = ${pollId})`),
-  //         },
-  //       },
-  //       raw: true,
-  //     });
-  
-  //     const options = await db.polls_options.findAll({
-  //       where: { poll_id: pollId },
-  //       include: [
-  //         {
-  //           model: db.votes,
-  //           as: "votes",
-  //           where: { poll_id: pollId, worst: false },
-  //           required: false,
-  //           attributes: ["user_id"],
-  //         },
-  //         {
-  //           model: db.votes,
-  //           as: "worst_votes",
-  //           where: { poll_id: pollId, worst: true },
-  //           required: false,
-  //           attributes: ["user_id"],
-  //         },
-  //       ],
-  //     });
-  
-  //     const formattedOptions = options.map((option) => ({
-  //       id: option.id,
-  //       text: option.text,
-  //       voted: option.votes.map((vote) => vote.user_id),
-  //       worst: option.worst_votes.map((worstVote) => worstVote.user_id),
-  //     }));
-  
-  //     res.status(200).send({
-  //       poll: {
-  //         body: {
-  //           title: poll.title,
-  //           description: poll.description,
-  //           options: poll.options.map((option) => ({
-  //             id: option.id,
-  //             text: option.text,
-  //           })),
-  //           setting: poll.setting,
-  //           fixed: [], // You need to provide the fixed options data here
-  //         },
-  //         share: {
-  //           link: "share",
-  //           value: token.value,
-  //         },
-  //       },
-  //       participants: participants.map((participant) => ({ name: participant.name })),
-  //       options: formattedOptions,
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //     res.status(500).send({ code: 500, message: "Internal server error" });
-  //   }
-  // };
   const getPollStatistics = async (req, res) => {
     const tokenValue = req.params.token;
   
@@ -433,8 +272,49 @@ const deletePoll = async (req, res) => {
   };
 
   const getPollList = async (req, res) => {
-
-  }
+    try {
+      const polls = await Poll.findAll({
+        include: [
+          {
+            model: Poll_setting,
+            as: 'setting',
+          },
+          {
+            model: Poll_option,
+            as: 'options',
+          },
+          {
+            model: Token,
+            as: 'tokens',
+          },
+        ],
+      });
+  
+      const formattedPolls = polls.map(poll => ({
+        poll: {
+          body: {
+            title: poll.title,
+            description: poll.description,
+            options: poll.options.map(option => ({
+              id: option.id,
+              text: option.text,
+            })),
+            setting: poll.setting,
+            fixed: poll.fixed,
+          },
+          tokens: poll.tokens.map(token => ({
+            link: token.link,
+            value: token.value,
+          })),
+        },
+      }));
+  
+      res.status(200).send(formattedPolls);
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ code: 500, message: "Internal server error" });
+    }
+  };
   
   
 
