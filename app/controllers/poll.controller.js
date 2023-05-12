@@ -431,8 +431,12 @@ const deletePoll = async (req, res) => {
       res.status(500).send({ code: 500, message: "Internal server error" });
     }
   };
+
+  const getPollList = async (req, res) => {
+
+  }
   
   
 
 
-module.exports = { addPoll, updatePoll, deletePoll, getPollStatistics, pollValidationRules }
+module.exports = { addPoll, updatePoll, deletePoll, getPollStatistics, pollValidationRules, getPollList }

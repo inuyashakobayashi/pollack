@@ -1,16 +1,25 @@
 import { Link } from 'react-router-dom'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
-import EnterToken from '../components/EnterToken';
+
 
 
 function Home() {
 
-
   return (
     <div>Home
+      <br/>
 
-      <Link to='/addPoll'>
+      <Link to='/poll'>
+        <button >Poll</button>
+      </Link>
+
+    <br/>
+    <Link to='/vote'>
+        <button >Vote</button>
+      </Link>
+
+      {/* <Link to='/addPoll'>
         <button >new poll</button>
       </Link>
 
@@ -19,7 +28,7 @@ function Home() {
       </Link>
       <hr/>
 
-      <EnterToken/>
+      <EnterToken/> */}
 
     </div>
   )
