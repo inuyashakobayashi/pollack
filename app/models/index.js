@@ -34,32 +34,8 @@ db.votes = require("./vote.model.js")(sequelize, DataTypes);
 db.polls = require("./poll.model.js")(sequelize, DataTypes);
 db.polls_settings = require("./poll_setting.model.js")(sequelize, DataTypes);
 db.polls_options = require("./poll_option.model.js")(sequelize, DataTypes);
+db.fixed_options = require("./fixed_option.model.js")(sequelize, DataTypes);
 
-// // Polls
-// db.polls.hasOne(db.polls_settings, { foreignKey: 'poll_id' , as: "setting"});
-// db.polls.hasMany(db.polls_options, { foreignKey: 'poll_id' ,as: "options"});
-// db.polls.hasMany(db.tokens, { foreignKey: 'poll_id' });
-// db.polls.hasMany(db.votes, { foreignKey: 'poll_id' });
-
-// // Poll_settings
-// db.polls_settings.belongsTo(db.polls, { foreignKey: 'poll_id'});
-
-// // Poll_options
-// db.polls_options.belongsTo(db.polls, { foreignKey: 'poll_id' });
-// db.polls_options.hasMany(db.votes, { foreignKey: 'poll_option_id' });
-
-// // Tokens
-// db.tokens.belongsTo(db.polls, { foreignKey: 'poll_id' });
-// db.tokens.belongsTo(db.users, { foreignKey: 'user_id' });
-
-// // Votes
-// db.votes.belongsTo(db.users, { foreignKey: 'user_id' });
-// db.votes.belongsTo(db.polls, { foreignKey: 'poll_id' });
-// db.votes.belongsTo(db.polls_options, { foreignKey: 'poll_option_id' });
-
-// // Users
-// db.users.hasMany(db.votes, { foreignKey: 'user_id' });
-// db.users.hasMany(db.tokens, { foreignKey: 'user_id' });
 
 // Polls
 db.polls.hasOne(db.polls_settings, { foreignKey: 'poll_id', as: "setting" });
@@ -88,6 +64,13 @@ db.votes.belongsTo(db.polls_options, { foreignKey: 'poll_option_id' });
 db.users.hasMany(db.votes, { foreignKey: 'user_id' });
 db.users.hasMany(db.tokens, { foreignKey: 'user_id' });
 // ...
+
+db.polls.hasMany(db.fixed_options, { foreignKey: 'poll_id' });
+db.polls_options.hasMany(db.fixed_options, { foreignKey: 'option_id' });
+
+db.fixed_options.belongsTo(db.polls, { foreignKey: 'poll_id' });
+db.fixed_options.belongsTo(db.polls_options, { foreignKey: 'option_id' });
+
 
 db.sequelize.sync({force: false})
 .then(()=>{

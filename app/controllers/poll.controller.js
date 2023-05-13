@@ -4,6 +4,7 @@ const Poll = db.polls;
 const Poll_setting = db.polls_settings;
 const Poll_option = db.polls_options;
 const Token = db.tokens;
+const FixedOption = db.fixed_options;
 const crypto = require("crypto");
 const Vote = db.votes;
 
@@ -16,6 +17,81 @@ const pollValidationRules = [
   body('setting.worst').isBoolean().withMessage('Worst should be a boolean value'),
   body('setting.deadline').isISO8601().withMessage('Deadline should be a valid ISO 8601 date format'),
 ];
+
+// Create and Save new Polls
+// const addPoll = async (req, res) => {
+//   const errors = validationResult(req);
+//   if (!errors.isEmpty()) {
+//     return res.status(405).json({ code: 405, message: 'Invalid input' });
+//   }
+
+//   let pollBody = {
+//     title: req.body.title,
+//     description: req.body.description,
+//     options: req.body.options,
+//     setting: req.body.setting,
+//     fixed: req.body.fixed
+//   }
+
+//   try {
+//     const poll = await Poll.create({
+//       title: pollBody.title,
+//       description: pollBody.description,
+//       fixed: pollBody.fixed
+//     })
+
+//     const poll_options = pollBody.options.map(option => {
+//       return Poll_option.create({
+//         text: option.text,
+//         poll_id: poll.id,
+//       })
+//     })
+
+//     const poll_setting = Poll_setting.create({
+//       voices: pollBody.setting.voices,
+//       worst: pollBody.setting.worst,
+//       deadline: pollBody.setting.deadline,
+//       poll_id: poll.id
+//     })
+
+//     // Generate a random string for the admin link and share link
+//     const adminTokenValue = crypto.randomBytes(16).toString("hex");
+//     const shareTokenValue = crypto.randomBytes(16).toString("hex");
+
+//     // Create tokens for the admin link and share link
+//     const adminToken = await Token.create({
+//       link: "admin",
+//       value: adminTokenValue,
+//       poll_id: poll.id,
+//       token_type: "admin"
+//     })
+
+//     const shareToken = await Token.create({
+//       link: "share",
+//       value: shareTokenValue,
+//       poll_id: poll.id,
+//       token_type: "share"
+//     })
+
+//     res.status(200).send({
+//       admin: {
+//         link: "admin",
+//         value: adminToken.value
+//       },
+//       share: {
+//         link: "share",
+//         value: shareToken.value
+//       }
+//     });
+
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       code: 500,
+//       message: 'Internal server error'
+//     });
+//   }
+// };
 
 // Create and Save new Polls
 const addPoll = async (req, res) => {
@@ -37,22 +113,37 @@ const addPoll = async (req, res) => {
     const poll = await Poll.create({
       title: pollBody.title,
       description: pollBody.description,
-      fixed: pollBody.fixed
     })
 
-    const poll_options = pollBody.options.map(option => {
-      return Poll_option.create({
+    const poll_options = await Promise.all(
+      pollBody.options.map(option => Poll_option.create({
         text: option.text,
         poll_id: poll.id,
-      })
-    })
+      }))
+    );
 
-    const poll_setting = Poll_setting.create({
+    const poll_setting = await Poll_setting.create({
       voices: pollBody.setting.voices,
       worst: pollBody.setting.worst,
       deadline: pollBody.setting.deadline,
       poll_id: poll.id
     })
+
+// Now that the poll options have been created, we can create the fixed options.
+if(pollBody.fixed && pollBody.fixed.length > 0 && !pollBody.fixed.includes(0)){
+  const fixedOptions = await Promise.all(pollBody.fixed.map(optionId => {
+    // Ensure the fixed option corresponds to a created poll option.
+    const matchingOption = poll_options.find(option => option.id === optionId);
+    if (matchingOption) {
+      return FixedOption.create({
+        poll_id: poll.id,
+        option_id: matchingOption.id,
+      });
+    } else {
+      throw new Error(`Fixed option with id ${optionId} does not match any created poll option.`);
+    }
+  }));
+}
 
     // Generate a random string for the admin link and share link
     const adminTokenValue = crypto.randomBytes(16).toString("hex");

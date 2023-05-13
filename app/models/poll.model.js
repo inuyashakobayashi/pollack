@@ -7,9 +7,6 @@ module.exports = (sequelize, DataTypes) => {
       },
       description: {
         type: DataTypes.STRING
-      },
-      fixed: {
-        type: DataTypes.INTEGER
       }
     });
     return Poll;
