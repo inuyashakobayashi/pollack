@@ -37,7 +37,7 @@ function PollList() {
 
   return (
     <Container>
-      <h1 className="text-center my-3">Poll List</h1>
+      <h1 className="text-center my-3">existing poll list</h1>
       <Row>
         {polls.map((pollItem, index) => (
           <Col md={6} lg={4} key={index} className="mb-4">

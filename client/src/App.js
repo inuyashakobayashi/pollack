@@ -9,6 +9,8 @@ import Poll from './pages/Poll';
 import Vote from './pages/Vote';
 import PollDetail from './pages/PollDetail'
 import PollUpdate from './pages/PollUpdate';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 function App() {
   return (
