@@ -5,6 +5,7 @@ const Poll_setting = db.polls_settings;
 const Poll_option = db.polls_options;
 const Token = db.tokens;
 const crypto = require("crypto");
+const Vote = db.votes;
 
 const pollValidationRules = [
   body('title').notEmpty().withMessage('Title is required'),
@@ -148,7 +149,7 @@ const deletePoll = async (req, res) => {
       const token = await Token.findOne({
         where: {
           value: tokenValue,
-          link: 'admin', //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
+          token_type: 'admin', //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
         },
       });
   
@@ -163,8 +164,11 @@ const deletePoll = async (req, res) => {
   
       await Poll_option.destroy({ where: { poll_id: pollId } });
       await Poll_setting.destroy({ where: { poll_id: pollId } });
-      await Poll.destroy({ where: { id: pollId } });
       await Token.destroy({ where: { poll_id: pollId } });
+      await Vote.destroy({where: {poll_id: pollId}});
+      await Poll.destroy({ where: { id: pollId } });
+      // await Token.destroy({ where: { poll_id: pollId } });
+      
   
       res.status(200).send({
         code: 200,

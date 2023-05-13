@@ -15,7 +15,7 @@ function AddVote() {
       try {
         const res = await axios.get(`http://localhost:8080/poll/lack/${token}`);
         setPoll(res.data);
-        console.log(poll)
+        setChoices(res.data.options)
         console.log(res.data)
       } catch (error) {
         console.error(error);
@@ -32,6 +32,7 @@ function AddVote() {
       return choice;
     });
     setChoices(newChoices);
+    console.log(newChoices)
   };
 
   const handleSubmit = async (e) => {
@@ -43,6 +44,7 @@ function AddVote() {
       },
       choice: choices,
     };
+    console.log(voteData)
 
     try {
       const res = await axios.post(`http://localhost:8080/vote/lack/${token}`, voteData);

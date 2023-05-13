@@ -19,7 +19,8 @@ function App() {
         <Route path='/poll' element={<Poll/>} />
         <Route path='/vote' element={<Vote/>} />
         <Route path='/poll/:token' element={<PollDetail />} />
-        <Route path='/poll-update/:token' element={<PollUpdate />} />
+        {/* <Route path='/poll-update/:token' element={<PollUpdate />} /> */}
+        <Route path="/poll-update/:adminToken/:shareToken" element={<PollUpdate />} />
         <Route path="/addPoll" element={<AddPoll />} />
         <Route path="/addVote/:token" element={<AddVote />} />
         <Route path="/showPolls" element={<ShowPolls />} />
