@@ -14,7 +14,7 @@ function Home() {
           </Card.Text>
           <Link to="/poll">
             <Button variant="primary" className="m-2">
-              Create a Poll
+              Poll
             </Button>
           </Link>
           <Link to="/vote">

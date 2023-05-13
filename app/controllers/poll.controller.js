@@ -94,53 +94,111 @@ const addPoll = async (req, res) => {
 };
 
 
+// const updatePoll = async (req, res) => {
+//     const tokenValue = req.params.token;
+//     const pollBody = req.body;
+
+//     try {
+//         const token = await Token.findOne({
+//             where: { value: tokenValue, link: "admin" } //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
+//         });
+
+//         if (!token) {
+//             res.status(404).send({ code: 404, message: "Poll not found." });
+//             return;
+//         }
+
+//         const pollId = token.poll_id;
+
+//         await Poll.update({
+//             title: pollBody.title,
+//             description: pollBody.description,
+//             fixed: pollBody.fixed
+//         }, {
+//             where: { id: pollId }
+//         });
+
+//         await Poll_option.destroy({ where: { poll_id: pollId } });
+//         const poll_options = pollBody.options.map(option => {
+//             return Poll_option.create({
+//                 text: option.text,
+//                 poll_id: pollId,
+//             });
+//         });
+
+//         await Poll_setting.update({
+//             voices: pollBody.setting.voices,
+//             worst: pollBody.setting.worst,
+//             deadline: pollBody.setting.deadline
+//         }, {
+//             where: { poll_id: pollId }
+//         });
+
+//         res.status(200).send({ code: 200, message: "i. O." });
+
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).send({ code: 500, message: "Internal server error" });
+//     }
+// };
+
 const updatePoll = async (req, res) => {
-    const tokenValue = req.params.token;
-    const pollBody = req.body;
+  const tokenValue = req.params.token;
+  const pollBody = req.body;
 
-    try {
-        const token = await Token.findOne({
-            where: { value: tokenValue, link: "admin" } //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
-        });
+  try {
+    const token = await Token.findOne({
+      where: { value: tokenValue, link: "admin" } 
+    });
 
-        if (!token) {
-            res.status(404).send({ code: 404, message: "Poll not found." });
-            return;
-        }
-
-        const pollId = token.poll_id;
-
-        await Poll.update({
-            title: pollBody.title,
-            description: pollBody.description,
-            fixed: pollBody.fixed
-        }, {
-            where: { id: pollId }
-        });
-
-        await Poll_option.destroy({ where: { poll_id: pollId } });
-        const poll_options = pollBody.options.map(option => {
-            return Poll_option.create({
-                text: option.text,
-                poll_id: pollId,
-            });
-        });
-
-        await Poll_setting.update({
-            voices: pollBody.setting.voices,
-            worst: pollBody.setting.worst,
-            deadline: pollBody.setting.deadline
-        }, {
-            where: { poll_id: pollId }
-        });
-
-        res.status(200).send({ code: 200, message: "i. O." });
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({ code: 500, message: "Internal server error" });
+    if (!token) {
+      res.status(404).send({ code: 404, message: "Poll not found." });
+      return;
     }
+
+    const pollId = token.poll_id;
+
+    await Poll.update({
+      title: pollBody.title,
+      description: pollBody.description,
+      fixed: pollBody.fixed
+    }, {
+      where: { id: pollId }
+    });
+
+    // Loop through each poll option in the request
+    for (let option of pollBody.options) {
+      // Check if the poll option already exists
+      let existingOption = await Poll_option.findOne({ where: { id: option.id } });
+
+      if (existingOption) {
+        // Update the existing poll option
+        await existingOption.update({ text: option.text });
+      } else {
+        // Create a new poll option
+        await Poll_option.create({
+          text: option.text,
+          poll_id: pollId,
+        });
+      }
+    }
+
+    await Poll_setting.update({
+      voices: pollBody.setting.voices,
+      worst: pollBody.setting.worst,
+      deadline: pollBody.setting.deadline
+    }, {
+      where: { poll_id: pollId }
+    });
+
+    res.status(200).send({ code: 200, message: "i. O." });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ code: 500, message: "Internal server error" });
+  }
 };
+
 
 const deletePoll = async (req, res) => {
     const tokenValue = req.params.token;
