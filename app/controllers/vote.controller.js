@@ -5,9 +5,67 @@ const Poll = db.polls;
 const Poll_option = db.polls_options;
 const Token = db.tokens;
 const Poll_setting = db.polls_settings;
+const Fixed_option = db.fixed_options;
 const crypto = require("crypto");
 
 //Add a new vote to the poll
+// const addVote = async (req, res) => {
+//   const tokenValue = req.params.token;
+//   const { owner, choice } = req.body;
+
+//   try {
+//     const token = await Token.findOne({ where: { value: tokenValue, token_type: "share" } });
+
+//     if (!token) {
+//       return res.status(404).json({ code: 404, message: 'Token not found' });
+//     }
+
+//     const poll = await Poll.findByPk(token.poll_id);
+
+//     if (!poll) {
+//       return res.status(404).json({ code: 404, message: 'Poll not found' });
+//     }
+
+//     const user = await User.create({
+//       name: owner.name
+//     });
+
+//     const votePromises = choice.map(({ id, worst }) =>
+//       Vote.create({
+//         user_id: user.id,
+//         poll_option_id: id,
+//         poll_id: poll.id,
+//         worst: worst || false,
+//       })
+//     );
+//     const votes = await Promise.all(votePromises);
+
+//      // Generate a random string for the edit token for user
+//      const editTokenValue = crypto.randomBytes(16).toString("hex");
+     
+
+//      // Create tokens for the admin link and share link
+//      const editToken = await Token.create({
+//          link: "edit",
+//          value: editTokenValue,
+//          poll_id: poll.id,
+//          token_type: "edit",
+//          user_id: user.id
+//      })
+
+//     res.status(200).json({
+//       description: 'The result after creating a vote.',
+//       edit: {
+//         link: '/vote/edit/' + editTokenValue,
+//         value: editTokenValue,
+//       },
+//     });
+//   } catch (error) {
+//     console.error('Error in addVote:', error);
+//     res.status(405).json({ code: 405, message: 'Invalid input' });
+//   }
+// };
+// Add a new vote to the poll
 const addVote = async (req, res) => {
   const tokenValue = req.params.token;
   const { owner, choice } = req.body;
@@ -25,6 +83,13 @@ const addVote = async (req, res) => {
       return res.status(404).json({ code: 404, message: 'Poll not found' });
     }
 
+    const pollSettings = await Poll_setting.findOne({ where: { poll_id: poll.id } });
+    const fixedOptions = await Fixed_option.findAll({ where: { poll_id: poll.id } });
+
+    if (choice.length > pollSettings.voices + fixedOptions.length) {
+      return res.status(405).json({ code: 405, message: 'Number of choices exceeds allowed voices' });
+    }
+
     const user = await User.create({
       name: owner.name
     });
@@ -39,18 +104,17 @@ const addVote = async (req, res) => {
     );
     const votes = await Promise.all(votePromises);
 
-     // Generate a random string for the edit token for user
-     const editTokenValue = crypto.randomBytes(16).toString("hex");
-     
+    // Generate a random string for the edit token for user
+    const editTokenValue = crypto.randomBytes(16).toString("hex");
 
-     // Create tokens for the admin link and share link
-     const editToken = await Token.create({
-         link: "edit",
-         value: editTokenValue,
-         poll_id: poll.id,
-         token_type: "edit",
-         user_id: user.id
-     })
+    // Create tokens for the admin link and share link
+    const editToken = await Token.create({
+      link: "edit",
+      value: editTokenValue,
+      poll_id: poll.id,
+      token_type: "edit",
+      user_id: user.id
+    });
 
     res.status(200).json({
       description: 'The result after creating a vote.',
@@ -64,6 +128,7 @@ const addVote = async (req, res) => {
     res.status(405).json({ code: 405, message: 'Invalid input' });
   }
 };
+
 
 // Find the vote of the token
 const findVote = async (req, res) => {
