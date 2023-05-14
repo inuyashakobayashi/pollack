@@ -402,6 +402,39 @@ const updateVote = async (req, res) => {
 
 
 // Delete a vote of the token
+// const deleteVote = async (req, res) => {
+//   const tokenValue = req.params.token;
+
+//   try {
+//     const token = await Token.findOne({ where: { value: tokenValue, token_type: "edit" } });
+
+//     if (!token) {
+//       return res.status(404).json({ code: 404, message: 'Token not found' });
+//     }
+
+//     const user = await User.findByPk(token.user_id);
+
+//     if (!user) {
+//       return res.status(404).json({ code: 404, message: 'User not found' });
+//     }
+
+//     const votes = await Vote.findAll({ where: { user_id: user.id, poll_id: token.poll_id } });
+
+//     if (votes.length === 0) {
+//       return res.status(404).json({ code: 404, message: 'No votes found for the user' });
+//     }
+
+//     const deletePromises = votes.map(vote => vote.destroy());
+//     await Promise.all(deletePromises);
+
+//     res.status(200).json({ code: 200, message: 'Vote deleted successfully' });
+//   } catch (error) {
+//     console.error('Error in deleteVote:', error);
+//     res.status(405).json({ code: 405, message: 'Invalid input' });
+//   }
+// };
+
+// Delete a vote of the token
 const deleteVote = async (req, res) => {
   const tokenValue = req.params.token;
 
@@ -424,15 +457,20 @@ const deleteVote = async (req, res) => {
       return res.status(404).json({ code: 404, message: 'No votes found for the user' });
     }
 
-    const deletePromises = votes.map(vote => vote.destroy());
-    await Promise.all(deletePromises);
+    const deleteVotesPromises = votes.map(vote => vote.destroy());
+    await Promise.all(deleteVotesPromises);
 
-    res.status(200).json({ code: 200, message: 'Vote deleted successfully' });
+    // After all votes are deleted, delete the user and token.
+    await user.destroy();
+    await token.destroy();
+
+    res.status(200).json({ code: 200, message: 'Vote, User and Token deleted successfully' });
   } catch (error) {
     console.error('Error in deleteVote:', error);
     res.status(405).json({ code: 405, message: 'Invalid input' });
   }
 };
+
 
 
 module.exports = { addVote, findVote, updateVote, deleteVote }
