@@ -1,6 +1,5 @@
 
 const dbConfig = require("../config/db.config.js");
-
 const {Sequelize, DataTypes} = require("sequelize");
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
@@ -23,11 +22,8 @@ sequelize.authenticate()
   console.log("Error: " + error);
 })
 const db = {};
-
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
-
-
 db.tokens = require("./token.model.js")(sequelize, DataTypes);
 db.users = require("./user.model.js")(sequelize, DataTypes);
 db.votes = require("./vote.model.js")(sequelize, DataTypes);
@@ -35,7 +31,6 @@ db.polls = require("./poll.model.js")(sequelize, DataTypes);
 db.polls_settings = require("./poll_setting.model.js")(sequelize, DataTypes);
 db.polls_options = require("./poll_option.model.js")(sequelize, DataTypes);
 db.fixed_options = require("./fixed_option.model.js")(sequelize, DataTypes);
-
 
 // Polls
 db.polls.hasOne(db.polls_settings, { foreignKey: 'poll_id', as: "setting" });
@@ -63,8 +58,8 @@ db.votes.belongsTo(db.polls_options, { foreignKey: 'poll_option_id' });
 // Users
 db.users.hasMany(db.votes, { foreignKey: 'user_id' });
 db.users.hasMany(db.tokens, { foreignKey: 'user_id' });
-// ...
 
+// 
 db.polls.hasMany(db.fixed_options, { foreignKey: 'poll_id' });
 db.polls_options.hasMany(db.fixed_options, { foreignKey: 'option_id' });
 
