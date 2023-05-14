@@ -303,6 +303,7 @@ const deletePoll = async (req, res) => {
     await Poll_setting.destroy({ where: { poll_id: pollId } });
     await Token.destroy({ where: { poll_id: pollId } });
     await Vote.destroy({ where: { poll_id: pollId } });
+    await Fixed_option.destroy({ where: { poll_id: pollId } });
     await Poll.destroy({ where: { id: pollId } });
 
 
