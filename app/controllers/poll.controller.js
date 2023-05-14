@@ -164,10 +164,6 @@ const updatePoll = async (req, res) => {
       where: { id: pollId }
     });
 
-
-
-
-
     await Poll_setting.update({
       voices: pollBody.setting.voices,
       worst: pollBody.setting.worst,
@@ -203,71 +199,32 @@ const updatePoll = async (req, res) => {
       await remainingOption.destroy();
     }
 
-    // if (pollBody.fixed && Array.isArray(pollBody.fixed) && pollBody.fixed.length > 0) {
-    //   // Check if the 'fixed' attribute contains '0'
-    //   if (pollBody.fixed.includes(0)) {
-    //     // Create a 'Fixed_option' with just a 'poll_id'
-    //     await Fixed_option.create({
-    //       poll_id: pollId,
-    //     });
-    //   } else {
-    //     // Check if the number of fixed options exceeds 'voices' in 'poll_setting'
-    //     if (pollBody.fixed.length > pollBody.setting.voices) {
-    //       throw new Error(`The number of fixed options exceeds the number of allowed voices.`);
-    //     } else {
-    //       // Create a 'Fixed_option' for each value in 'fixed', linking it to the corresponding 'poll_option' and 'poll'
-    //       const fixedOptions = await Promise.all(pollBody.fixed.map(async optionId => {
-    //         const matchingOption = pollBody.options.find(option => option.id === optionId);
-
-    //         if (matchingOption) {
-    //           const pollOption = await Poll_option.findOne({ where: { id: matchingOption.id, poll_id: pollId } });
-    //           if (pollOption) {
-    //             return Fixed_option.create({
-    //               poll_id: pollId,
-    //               option_id: pollOption.id,
-    //             });
-    //           } else {
-    //             throw new Error(`Poll option with id ${matchingOption.id} does not exist.`);
-    //           }
-    //         } else {
-    //           throw new Error(`Fixed option with id ${optionId} does not match any created poll option.`);
-    //         }
-    //       }));
-
-    //     }
-    //   }
-    // }
     let existingFixedOptions = await Fixed_option.findAll({ where: { poll_id: pollId } });
-    
-    // First, destroy all existing fixed options for this poll
-await Fixed_option.destroy({ where: { poll_id: pollId } });
 
-if (pollBody.fixed && Array.isArray(pollBody.fixed) && pollBody.fixed.length > 0) {
-  // Check if the 'fixed' attribute contains '0'
-  if (!pollBody.fixed.includes(0)) {
-    // Check if the number of fixed options exceeds 'voices' in 'poll_setting'
-    if (pollBody.fixed.length > pollBody.setting.voices) {
-      throw new Error(`The number of fixed options exceeds the number of allowed voices.`);
-    } else {
-      // Create a 'Fixed_option' for each value in 'fixed', linking it to the corresponding 'poll_option' and 'poll'
-      for (let optionId of pollBody.fixed) {
-        const pollOption = await Poll_option.findOne({ where: { id: optionId, poll_id: pollId } });
-        if (!pollOption) {
-          throw new Error(`Poll option with id ${optionId} does not exist.`);
+    // First, destroy all existing fixed options for this poll
+    await Fixed_option.destroy({ where: { poll_id: pollId } });
+
+    if (pollBody.fixed && Array.isArray(pollBody.fixed) && pollBody.fixed.length > 0) {
+      // Check if the 'fixed' attribute contains '0'
+      if (!pollBody.fixed.includes(0)) {
+        // Check if the number of fixed options exceeds 'voices' in 'poll_setting'
+        if (pollBody.fixed.length > pollBody.setting.voices) {
+          throw new Error(`The number of fixed options exceeds the number of allowed voices.`);
+        } else {
+          // Create a 'Fixed_option' for each value in 'fixed', linking it to the corresponding 'poll_option' and 'poll'
+          for (let optionId of pollBody.fixed) {
+            const pollOption = await Poll_option.findOne({ where: { id: optionId, poll_id: pollId } });
+            if (!pollOption) {
+              throw new Error(`Poll option with id ${optionId} does not exist.`);
+            }
+            await Fixed_option.create({
+              poll_id: pollId,
+              option_id: optionId,
+            });
+          }
         }
-        await Fixed_option.create({
-          poll_id: pollId,
-          option_id: optionId,
-        });
       }
     }
-  }
-}
-
-
-    
-
-
 
     res.status(200).send({ code: 200, message: "i. O." });
 
@@ -279,6 +236,47 @@ if (pollBody.fixed && Array.isArray(pollBody.fixed) && pollBody.fixed.length > 0
 
 
 
+// const deletePoll = async (req, res) => {
+//   const tokenValue = req.params.token;
+
+//   try {
+//     const token = await Token.findOne({
+//       where: {
+//         value: tokenValue,
+//         token_type: 'admin', //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
+//       },
+//     });
+
+//     if (!token) {
+//       return res.status(400).send({
+//         code: 400,
+//         message: 'Invalid poll admin token.',
+//       });
+//     }
+
+//     const pollId = token.poll_id;
+
+//     await Poll_option.destroy({ where: { poll_id: pollId } });
+//     await Poll_setting.destroy({ where: { poll_id: pollId } });
+//     await Token.destroy({ where: { poll_id: pollId } });
+//     await Vote.destroy({ where: { poll_id: pollId } });
+//     await Fixed_option.destroy({ where: { poll_id: pollId } });
+//     await Poll.destroy({ where: { id: pollId } });
+
+
+//     res.status(200).send({
+//       code: 200,
+//       message: 'i. O.',
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(404).send({
+//       code: 404,
+//       message: 'Poll not found.',
+//     });
+//   }
+// };
+
 const deletePoll = async (req, res) => {
   const tokenValue = req.params.token;
 
@@ -286,7 +284,7 @@ const deletePoll = async (req, res) => {
     const token = await Token.findOne({
       where: {
         value: tokenValue,
-        token_type: 'admin', //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
+        token_type: 'admin',
       },
     });
 
@@ -299,13 +297,20 @@ const deletePoll = async (req, res) => {
 
     const pollId = token.poll_id;
 
+    // Fetch the poll options associated with the poll
+    const pollOptions = await Poll_option.findAll({ where: { poll_id: pollId } });
+
+    // Extract the ids of the poll options
+    const pollOptionIds = pollOptions.map(option => option.id);
+
+    // Delete votes where the option_id is in pollOptionIds
+    await Vote.destroy({ where: { poll_option_id: pollOptionIds } });
+
     await Poll_option.destroy({ where: { poll_id: pollId } });
     await Poll_setting.destroy({ where: { poll_id: pollId } });
     await Token.destroy({ where: { poll_id: pollId } });
-    await Vote.destroy({ where: { poll_id: pollId } });
     await Fixed_option.destroy({ where: { poll_id: pollId } });
     await Poll.destroy({ where: { id: pollId } });
-
 
     res.status(200).send({
       code: 200,
@@ -389,26 +394,14 @@ const getPollStatistics = async (req, res) => {
       voted: option.votes.map((vote) => vote.user_id),
       worst: option.worst_votes.map((worstVote) => worstVote.user_id),
     }));
+    // const formattedOptions = options.map((option) => ({
+    //   id: option.id,
+    //   text: option.text,
+    //   voted: option.votes.length,
+    //   worst: option.worst_votes.length,
+    // }));
+    
 
-    // res.status(200).send({
-    //   poll: {
-    //     body: {
-    //       title: poll.title,
-    //       description: poll.description,
-    //       options: poll.options.map((option) => ({
-    //         id: option.id,
-    //         text: option.text,
-    //       })),
-    //       setting: poll.setting,
-    //       fixed: poll.fixed, // Fetch the fixed options data from the poll
-    //     },
-    //     share: {
-    //       link: "share",
-    //       value: token.value,
-    //     },
-    //   },
-    //   participants: participants.map((participant) => ({ name: participant.name })),
-    //   options: formattedOptions,
     res.status(200).send({
       poll: {
         body: {
@@ -484,55 +477,6 @@ const getPollList = async (req, res) => {
   }
 };
 
-
-// const getPollList = async (req, res) => {
-//   try {
-//     const polls = await Poll.findAll({
-//       include: [
-//         {
-//           model: Poll_setting,
-//           as: 'setting',
-//         },
-//         {
-//           model: Poll_option,
-//           as: 'options',
-//         },
-//         {
-//           model: Token,
-//           as: 'tokens',
-//         },
-//         {
-//           model: db.fixed_options, // This includes the fixed options in your query
-//           as: 'fixed',
-//         },
-//       ],
-//     });
-
-//     const formattedPolls = polls.map(poll => ({
-//       poll: {
-//         body: {
-//           title: poll.title,
-//           description: poll.description,
-//           options: poll.options.map(option => ({
-//             id: option.id,
-//             text: option.text,
-//           })),
-//           setting: poll.setting,
-//           fixed: poll.fixed,
-//         },
-//         tokens: poll.tokens.map(token => ({
-//           link: token.link,
-//           value: token.value,
-//         })),
-//       },
-//     }));
-
-//     res.status(200).send(formattedPolls);
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).send({ code: 500, message: "Internal server error" });
-//   }
-// };
 
 
 module.exports = {

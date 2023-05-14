@@ -204,6 +204,12 @@ function AddPoll() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+        // Check if all options are filled
+        if (options.some((option) => option.text === '')) {
+          alert('Please fill all options');
+          return;
+        }
+ 
 
     const pollData = {
       title,

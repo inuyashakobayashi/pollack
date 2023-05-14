@@ -211,21 +211,40 @@ function PollUpdate() {
   const navigate = useNavigate();
   const { adminToken, shareToken } = useParams(); // Extracting tokens from URL parameters
 
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await axios.get(`http://localhost:8080/poll/lack/${shareToken}`);
+  //       setTitle(response.data.poll.body.title);
+  //       setDescription(response.data.poll.body.description);
+  //       setOptions(response.data.poll.body.options);
+  //       setSetting(response.data.poll.body.setting);
+  //       setFixed(response.data.poll.body.fixed);
+  //       console.log(response.data.poll.body.options)
+  //     } catch (error) {
+  //       console.error(error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [shareToken]);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/poll/lack/${shareToken}`);
         setTitle(response.data.poll.body.title);
         setDescription(response.data.poll.body.description);
+        // ensure options 'id' corresponds to the poll_option id in your database
         setOptions(response.data.poll.body.options);
         setSetting(response.data.poll.body.setting);
+        // ensure fixed 'id' corresponds to the poll_option id in your database
         setFixed(response.data.poll.body.fixed);
         console.log(response.data.poll.body.options)
       } catch (error) {
         console.error(error);
       }
     };
-
+  
     fetchData();
   }, [shareToken]);
 
