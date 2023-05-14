@@ -131,6 +131,72 @@ const addVote = async (req, res) => {
 
 
 // Find the vote of the token
+// const findVote = async (req, res) => {
+//   const tokenValue = req.params.token;
+
+//   try {
+//     const token = await Token.findOne({ where: { value: tokenValue, token_type: "edit" } });
+
+//     if (!token) {
+//       return res.status(404).json({ code: 404, message: 'Token not found' });
+//     }
+
+//     const poll = await Poll.findByPk(token.poll_id, {
+//       include: [
+//         {
+//           model: Poll_option,
+//           as: 'options',
+//         },
+//         {
+//           model: Poll_setting,
+//           as: 'setting',
+//         },
+//       ],
+//     });
+
+//     if (!poll) {
+//       return res.status(404).json({ code: 404, message: 'Poll not found' });
+//     }
+
+//     const user = await User.findByPk(token.user_id);
+
+//     if (!user) {
+//       return res.status(404).json({ code: 404, message: 'User not found' });
+//     }
+
+//     const votes = await Vote.findAll({ where: { user_id: user.id, poll_id: poll.id } });
+
+//     res.status(200).json({
+//       poll: {
+//         body: {
+//           title: poll.title,
+//           description: poll.description,
+//           options: poll.options,
+//           setting: poll.setting,
+//           fixed: poll.fixed,
+//         },
+//         share: {
+//           link: 'string',
+//           value: tokenValue,
+//         },
+//       },
+//       vote: {
+//         owner: {
+//           name: user.name,
+//         },
+//         choice: votes.map(vote => ({
+//           id: vote.poll_option_id,
+//           worst: vote.worst,
+//         })),
+//       },
+//       time: new Date().toISOString(),
+//     });
+//   } catch (error) {
+//     console.error('Error in findVote:', error);
+//     res.status(405).json({ code: 405, message: 'Invalid input' });
+//   }
+// };
+
 const findVote = async (req, res) => {
   const tokenValue = req.params.token;
 
@@ -151,6 +217,10 @@ const findVote = async (req, res) => {
           model: Poll_setting,
           as: 'setting',
         },
+        {
+          model: Fixed_option,
+          as: 'fixed',
+        },
       ],
     });
 
@@ -166,6 +236,8 @@ const findVote = async (req, res) => {
 
     const votes = await Vote.findAll({ where: { user_id: user.id, poll_id: poll.id } });
 
+    const shareToken = await Token.findOne({ where: { poll_id: poll.id, token_type: "share" } });
+
     res.status(200).json({
       poll: {
         body: {
@@ -173,11 +245,11 @@ const findVote = async (req, res) => {
           description: poll.description,
           options: poll.options,
           setting: poll.setting,
-          fixed: poll.fixed,
+          fixed: poll.fixed.map(option => option.option_id || 0),
         },
         share: {
-          link: 'string',
-          value: tokenValue,
+          link: '/vote/lack/' + shareToken.value,
+          value: shareToken.value,
         },
       },
       vote: {
@@ -189,7 +261,7 @@ const findVote = async (req, res) => {
           worst: vote.worst,
         })),
       },
-      time: new Date().toISOString(),
+      time: votes[0] ? votes[0].createdAt.toISOString() : new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error in findVote:', error);
@@ -197,6 +269,75 @@ const findVote = async (req, res) => {
   }
 };
 
+
+// //Update a vote of the token
+// const updateVote = async (req, res) => {
+//   const tokenValue = req.params.token;
+//   const { owner, choice } = req.body;
+
+//   try {
+//     const token = await Token.findOne({ where: { value: tokenValue, token_type: "edit" } });
+
+//     if (!token) {
+//       return res.status(404).json({ code: 404, message: 'Token not found' });
+//     }
+
+//     const poll = await Poll.findByPk(token.poll_id);
+
+//     if (!poll) {
+//       return res.status(404).json({ code: 404, message: 'Poll not found' });
+//     }
+
+//     const user = await User.findOne({ where: { name: owner.name } });
+
+//     if (!user) {
+//       return res.status(404).json({ code: 404, message: 'User not found' });
+//     }
+
+//     const votePromises = choice.map(async ({ id, worst }) => {
+//       let vote = await Vote.findOne({
+//         where: { user_id: user.id, poll_option_id: id, poll_id: poll.id },
+//       });
+    
+//       if (!vote) {
+//         // Check if a vote with the same user_id, poll_id, and different poll_option_id exists
+//         const existingVote = await Vote.findOne({
+//           where: { user_id: user.id, poll_id: poll.id },
+//         });
+    
+//         if (existingVote) {
+//           // If an existing vote is found, delete it before creating a new one
+//           await existingVote.destroy();
+//         }
+    
+//         // Create a new vote
+//         vote = await Vote.create({
+//           user_id: user.id,
+//           poll_id: poll.id,
+//           poll_option_id: id,
+//           worst: worst || false,
+//         });
+//       } else {
+//         // Update the existing vote
+//         await vote.update({ worst: worst || false });
+//       }
+    
+//       return vote;
+//     });
+    
+
+//     const updatedVotes = await Promise.all(votePromises);
+
+//     if (updatedVotes.some(vote => vote === null)) {
+//       return res.status(404).json({ code: 404, message: 'Vote not found' });
+//     }
+
+//     res.status(200).json({ code: 200, message: 'Vote updated successfully' });
+//   } catch (error) {
+//     console.error('Error in updateVote:', error);
+//     res.status(405).json({ code: 405, message: 'Invalid input' });
+//   }
+// };
 
 //Update a vote of the token
 const updateVote = async (req, res) => {
@@ -222,43 +363,35 @@ const updateVote = async (req, res) => {
       return res.status(404).json({ code: 404, message: 'User not found' });
     }
 
-    const votePromises = choice.map(async ({ id, worst }) => {
-      let vote = await Vote.findOne({
-        where: { user_id: user.id, poll_option_id: id, poll_id: poll.id },
-      });
-    
-      if (!vote) {
-        // Check if a vote with the same user_id, poll_id, and different poll_option_id exists
-        const existingVote = await Vote.findOne({
-          where: { user_id: user.id, poll_id: poll.id },
-        });
-    
-        if (existingVote) {
-          // If an existing vote is found, delete it before creating a new one
-          await existingVote.destroy();
-        }
-    
-        // Create a new vote
-        vote = await Vote.create({
-          user_id: user.id,
-          poll_id: poll.id,
-          poll_option_id: id,
-          worst: worst || false,
-        });
-      } else {
-        // Update the existing vote
-        await vote.update({ worst: worst || false });
-      }
-    
-      return vote;
+    // Fetch all existing votes
+    const existingVotes = await Vote.findAll({
+      where: { user_id: user.id, poll_id: poll.id },
     });
-    
 
-    const updatedVotes = await Promise.all(votePromises);
+    // Filter out the votes that are no longer in the choice
+    const votesToDelete = existingVotes.filter((vote) => {
+      return !choice.some(({ id }) => vote.poll_option_id === id);
+    });
 
-    if (updatedVotes.some(vote => vote === null)) {
-      return res.status(404).json({ code: 404, message: 'Vote not found' });
-    }
+    // Delete the votes that are no longer in the choice
+    const deletePromises = votesToDelete.map((vote) => vote.destroy());
+    await Promise.all(deletePromises);
+
+    // Create new votes for choices that didn't exist before
+    const newVotesToCreate = choice.filter(({ id }) => {
+      return !existingVotes.some((vote) => vote.poll_option_id === id);
+    });
+
+    const createPromises = newVotesToCreate.map(({ id, worst }) => {
+      return Vote.create({
+        user_id: user.id,
+        poll_id: poll.id,
+        poll_option_id: id,
+        worst: worst || false,
+      });
+    });
+
+    await Promise.all(createPromises);
 
     res.status(200).json({ code: 200, message: 'Vote updated successfully' });
   } catch (error) {
@@ -266,6 +399,7 @@ const updateVote = async (req, res) => {
     res.status(405).json({ code: 405, message: 'Invalid input' });
   }
 };
+
 
 // Delete a vote of the token
 const deleteVote = async (req, res) => {
