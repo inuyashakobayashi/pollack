@@ -60,7 +60,7 @@ db.users.hasMany(db.votes, { foreignKey: 'user_id' });
 db.users.hasMany(db.tokens, { foreignKey: 'user_id' });
 
 // 
-db.polls.hasMany(db.fixed_options, { foreignKey: 'poll_id' });
+db.polls.hasMany(db.fixed_options, { foreignKey: 'poll_id' , as: 'fixed'});
 db.polls_options.hasMany(db.fixed_options, { foreignKey: 'option_id' });
 
 db.fixed_options.belongsTo(db.polls, { foreignKey: 'poll_id' });

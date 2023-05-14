@@ -335,16 +335,20 @@ const getPollStatistics = async (req, res) => {
 
     const pollId = token.poll_id;
 
-    const poll = await Poll.findOne({
+    const poll = await db.polls.findOne({
       where: { id: pollId },
       include: [
         {
           model: db.polls_options,
-          as: "options",
+          as: 'options',
         },
         {
           model: db.polls_settings,
-          as: "setting",
+          as: 'setting',
+        },
+        {
+          model: db.fixed_options, // This includes the fixed options in your query
+          as: 'fixed',
         },
       ],
     });
@@ -386,6 +390,25 @@ const getPollStatistics = async (req, res) => {
       worst: option.worst_votes.map((worstVote) => worstVote.user_id),
     }));
 
+    // res.status(200).send({
+    //   poll: {
+    //     body: {
+    //       title: poll.title,
+    //       description: poll.description,
+    //       options: poll.options.map((option) => ({
+    //         id: option.id,
+    //         text: option.text,
+    //       })),
+    //       setting: poll.setting,
+    //       fixed: poll.fixed, // Fetch the fixed options data from the poll
+    //     },
+    //     share: {
+    //       link: "share",
+    //       value: token.value,
+    //     },
+    //   },
+    //   participants: participants.map((participant) => ({ name: participant.name })),
+    //   options: formattedOptions,
     res.status(200).send({
       poll: {
         body: {
@@ -396,7 +419,7 @@ const getPollStatistics = async (req, res) => {
             text: option.text,
           })),
           setting: poll.setting,
-          fixed: poll.fixed, // Fetch the fixed options data from the poll
+          fixed: poll.fixed.map((fixedOption) => fixedOption.option_id), // Send the IDs of the fixed options
         },
         share: {
           link: "share",
@@ -428,6 +451,10 @@ const getPollList = async (req, res) => {
           model: Token,
           as: 'tokens',
         },
+        {
+          model: Fixed_option, // Include the fixed options
+          as: 'fixed',
+        },
       ],
     });
 
@@ -441,7 +468,7 @@ const getPollList = async (req, res) => {
             text: option.text,
           })),
           setting: poll.setting,
-          fixed: poll.fixed,
+          fixed: poll.fixed.map(fixedOption => fixedOption.option_id), // Map over the fixed options to get their IDs
         },
         tokens: poll.tokens.map(token => ({
           link: token.link,
@@ -456,6 +483,56 @@ const getPollList = async (req, res) => {
     res.status(500).send({ code: 500, message: "Internal server error" });
   }
 };
+
+
+// const getPollList = async (req, res) => {
+//   try {
+//     const polls = await Poll.findAll({
+//       include: [
+//         {
+//           model: Poll_setting,
+//           as: 'setting',
+//         },
+//         {
+//           model: Poll_option,
+//           as: 'options',
+//         },
+//         {
+//           model: Token,
+//           as: 'tokens',
+//         },
+//         {
+//           model: db.fixed_options, // This includes the fixed options in your query
+//           as: 'fixed',
+//         },
+//       ],
+//     });
+
+//     const formattedPolls = polls.map(poll => ({
+//       poll: {
+//         body: {
+//           title: poll.title,
+//           description: poll.description,
+//           options: poll.options.map(option => ({
+//             id: option.id,
+//             text: option.text,
+//           })),
+//           setting: poll.setting,
+//           fixed: poll.fixed,
+//         },
+//         tokens: poll.tokens.map(token => ({
+//           link: token.link,
+//           value: token.value,
+//         })),
+//       },
+//     }));
+
+//     res.status(200).send(formattedPolls);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({ code: 500, message: "Internal server error" });
+//   }
+// };
 
 
 module.exports = {
