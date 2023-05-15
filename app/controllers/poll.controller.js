@@ -11,12 +11,13 @@ const Vote = db.votes;
 const pollValidationRules = [
   body('title').notEmpty().withMessage('Title is required'),
   body('description').notEmpty().withMessage('Description is required'),
-  body('options').isArray({ min: 1 }).withMessage('At least one option is required'),
+  body('options').isArray({ min: 2 }).withMessage('At least two options are required'),
   body('options.*.text').notEmpty().withMessage('Option text is required'),
   body('setting.voices').isInt({ min: 1 }).withMessage('Voices should be an integer greater than 0'),
   body('setting.worst').isBoolean().withMessage('Worst should be a boolean value'),
   body('setting.deadline').isISO8601().withMessage('Deadline should be a valid ISO 8601 date format'),
 ];
+
 
 // Create and Save new Polls
 const addPoll = async (req, res) => {
@@ -126,12 +127,16 @@ const addPoll = async (req, res) => {
 const pollUpdateValidationRules = [
   body('title').notEmpty().withMessage('Title is required'),
   body('description').notEmpty().withMessage('Description is required'),
-  body('options').isArray({ min: 1 }).withMessage('At least one option is required'),
+  body('options').isArray({ min: 2 }).withMessage('At least two options are required'),
+  body('options.*.id').isInt().withMessage('Option id is required and should be an integer'),
   body('options.*.text').notEmpty().withMessage('Option text is required'),
   body('setting.voices').isInt({ min: 1 }).withMessage('Voices should be an integer greater than 0'),
   body('setting.worst').isBoolean().withMessage('Worst should be a boolean value'),
   body('setting.deadline').isISO8601().withMessage('Deadline should be a valid ISO 8601 date format'),
+  body('fixed').isArray({ min: 1 }).withMessage('At least one fixed option is required'),
+  body('fixed.*').isInt().withMessage('Fixed option should be an integer'),
 ];
+
 
 const updatePoll = async (req, res) => {
   const tokenValue = req.params.token;
@@ -234,48 +239,6 @@ const updatePoll = async (req, res) => {
   }
 };
 
-
-
-// const deletePoll = async (req, res) => {
-//   const tokenValue = req.params.token;
-
-//   try {
-//     const token = await Token.findOne({
-//       where: {
-//         value: tokenValue,
-//         token_type: 'admin', //! muss noch ändern(nach token_type==admin suchen und nicht nach link==admin)
-//       },
-//     });
-
-//     if (!token) {
-//       return res.status(400).send({
-//         code: 400,
-//         message: 'Invalid poll admin token.',
-//       });
-//     }
-
-//     const pollId = token.poll_id;
-
-//     await Poll_option.destroy({ where: { poll_id: pollId } });
-//     await Poll_setting.destroy({ where: { poll_id: pollId } });
-//     await Token.destroy({ where: { poll_id: pollId } });
-//     await Vote.destroy({ where: { poll_id: pollId } });
-//     await Fixed_option.destroy({ where: { poll_id: pollId } });
-//     await Poll.destroy({ where: { id: pollId } });
-
-
-//     res.status(200).send({
-//       code: 200,
-//       message: 'i. O.',
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(404).send({
-//       code: 404,
-//       message: 'Poll not found.',
-//     });
-//   }
-// };
 
 const deletePoll = async (req, res) => {
   const tokenValue = req.params.token;
@@ -394,14 +357,7 @@ const getPollStatistics = async (req, res) => {
       voted: option.votes.map((vote) => vote.user_id),
       worst: option.worst_votes.map((worstVote) => worstVote.user_id),
     }));
-    // const formattedOptions = options.map((option) => ({
-    //   id: option.id,
-    //   text: option.text,
-    //   voted: option.votes.length,
-    //   worst: option.worst_votes.length,
-    // }));
-    
-
+ 
     res.status(200).send({
       poll: {
         body: {
@@ -476,8 +432,6 @@ const getPollList = async (req, res) => {
     res.status(500).send({ code: 500, message: "Internal server error" });
   }
 };
-
-
 
 module.exports = {
   addPoll, updatePoll, deletePoll, getPollStatistics,
