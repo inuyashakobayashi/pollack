@@ -1,9 +1,9 @@
 // const voteController = require("../app/controllers/vote.controller");
 const voteRouter = require("express").Router();
-const {addVote, findVote, updateVote, deleteVote} = require("../app/controllers/vote.controller");
+const {addVote, findVote, updateVote, deleteVote,voteValidationRules} = require("../app/controllers/vote.controller");
 
 
-voteRouter.post("/lack/:token", addVote);
+voteRouter.post("/lack/:token",voteValidationRules, addVote);
 
 voteRouter.get("/lack/:token", findVote);
 
