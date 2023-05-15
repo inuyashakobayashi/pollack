@@ -351,12 +351,23 @@ const getPollStatistics = async (req, res) => {
       ],
     });
 
-    const formattedOptions = options.map((option) => ({
-      id: option.id,
-      text: option.text,
-      voted: option.votes.map((vote) => vote.user_id),
-      worst: option.worst_votes.map((worstVote) => worstVote.user_id),
-    }));
+    // const formattedOptions = options.map((option) => ({
+    //   id: option.id,
+    //   text: option.text,
+    //   voted: option.votes.map((vote) => vote.user_id),
+    //   worst: option.worst_votes.map((worstVote) => worstVote.user_id),
+    // }));
+    const formattedOptions = options.map((option) => {
+      const voted = option.votes.filter((vote) => !vote.worst).map((vote) => vote.user_id);
+      return {
+        id: option.id,
+        text: option.text,
+        voted: [voted.length],
+        // votedCount: voted.length, // Add this line
+        worst: option.votes.filter((vote) => vote.worst).map((vote) => vote.user_id),
+      }
+    });
+    
  
     res.status(200).send({
       poll: {
@@ -383,6 +394,7 @@ const getPollStatistics = async (req, res) => {
     res.status(500).send({ code: 500, message: "Internal server error" });
   }
 };
+
 
 const getPollList = async (req, res) => {
   try {

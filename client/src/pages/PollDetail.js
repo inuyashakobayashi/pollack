@@ -55,6 +55,7 @@ function PollDetail() {
     axios.get(`http://localhost:8080/poll/lack/${token}`)
       .then(response => {
         setPoll(response.data);
+        console.log(response.data)
       })
       .catch(error => {
         console.error('There was an error retrieving the poll data!', error);
@@ -74,7 +75,7 @@ function PollDetail() {
         <ListGroup variant="flush">
           {poll.options.map((option, index) => (
             <ListGroup.Item key={index}>
-              {option.text} - Votes: {option.voted.length}
+              {option.text} - Votes: {option.voted[0]}
             </ListGroup.Item>
           ))}
         </ListGroup>

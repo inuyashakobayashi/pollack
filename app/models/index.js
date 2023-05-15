@@ -46,6 +46,8 @@ db.polls_options.belongsTo(db.polls, { foreignKey: 'poll_id' });
 db.polls_options.hasMany(db.votes, { foreignKey: 'poll_option_id', as: 'votes' });
 db.polls_options.hasMany(db.votes, { foreignKey: 'poll_option_id', as: 'worst_votes' });
 
+
+
 // Tokens
 db.tokens.belongsTo(db.polls, { foreignKey: 'poll_id' });
 db.tokens.belongsTo(db.users, { foreignKey: 'user_id' });
