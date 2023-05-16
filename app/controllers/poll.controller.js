@@ -315,13 +315,13 @@ const getPollStatistics = async (req, res) => {
           as: 'setting',
         },
         {
-          model: db.fixed_options, // This includes the fixed options in your query
+          model: db.fixed_options,
           as: 'fixed',
         },
       ],
     });
 
-    // Fetch participants, options with their votes, and worst votes
+    // Fetch participants and their votes
     const participants = await db.users.findAll({
       where: {
         id: {
@@ -331,44 +331,46 @@ const getPollStatistics = async (req, res) => {
       raw: true,
     });
 
-    const options = await db.polls_options.findAll({
+    // Fetch votes
+    const votes = await db.votes.findAll({
       where: { poll_id: pollId },
-      include: [
-        {
-          model: db.votes,
-          as: "votes",
-          where: { poll_id: pollId, worst: false },
-          required: false,
-          attributes: ["user_id"],
-        },
-        {
-          model: db.votes,
-          as: "worst_votes",
-          where: { poll_id: pollId, worst: true },
-          required: false,
-          attributes: ["user_id"],
-        },
-      ],
+      raw: true,
     });
 
-    // const formattedOptions = options.map((option) => ({
-    //   id: option.id,
-    //   text: option.text,
-    //   voted: option.votes.map((vote) => vote.user_id),
-    //   worst: option.worst_votes.map((worstVote) => worstVote.user_id),
-    // }));
+   // Group votes by option
+const votesByOption = votes.reduce((groups, vote) => {
+  const groupId = vote.poll_option_id;
+  if (!groups[groupId]) {
+    groups[groupId] = {
+      voted: [],
+      worst: [],
+    };
+  }
+  // Add the vote to the voted array in all cases
+  groups[groupId].voted.push(vote.user_id);
+  // If the vote is marked as worst, also add it to the worst array
+  if (vote.worst) {
+    groups[groupId].worst.push(vote.user_id);
+  }
+  return groups;
+}, {});
+
+
+    // Fetch options and append votes
+    const options = await db.polls_options.findAll({
+      where: { poll_id: pollId },
+    });
+
     const formattedOptions = options.map((option) => {
-      const voted = option.votes.filter((vote) => !vote.worst).map((vote) => vote.user_id);
+      const optionVotes = votesByOption[option.id] || { voted: [], worst: [] };
       return {
         id: option.id,
         text: option.text,
-        voted: [voted.length],
-        // votedCount: voted.length, // Add this line
-        worst: option.votes.filter((vote) => vote.worst).map((vote) => vote.user_id),
-      }
+        voted: optionVotes.voted,
+        worst: optionVotes.worst,
+      };
     });
-    
- 
+
     res.status(200).send({
       poll: {
         body: {
@@ -379,8 +381,10 @@ const getPollStatistics = async (req, res) => {
             text: option.text,
           })),
           setting: poll.setting,
-          fixed: poll.fixed.map((fixedOption) => fixedOption.option_id), // Send the IDs of the fixed options
-        },
+          fixed: (!poll.fixed || poll.fixed.includes(null)) 
+        ? [0] 
+        : poll.fixed.map((fixedOption) => fixedOption.option_id || 0),
+       },
         share: {
           link: "share",
           value: token.value,
@@ -389,11 +393,13 @@ const getPollStatistics = async (req, res) => {
       participants: participants.map((participant) => ({ name: participant.name })),
       options: formattedOptions,
     });
+    
   } catch (error) {
     console.log(error);
     res.status(500).send({ code: 500, message: "Internal server error" });
   }
 };
+
 
 
 const getPollList = async (req, res) => {
