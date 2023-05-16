@@ -10,7 +10,7 @@ function PollDetail() {
 
   useEffect(() => {
     // Fetch the poll data when the component mounts
-    axios.get(`http://localhost:8080/poll/lack/${token}`)
+    axios.get(`http://localhost:49715/poll/lack/${token}`)
       .then(response => {
         setPoll(response.data);
         console.log(response.data)

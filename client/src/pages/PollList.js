@@ -75,7 +75,7 @@ function PollList() {
   }, []);
 
   const fetchPolls = () => {
-    axios.get('http://localhost:8080/poll/lack/pollList')
+    axios.get('http://localhost:49715/poll/lack/pollList')
       .then(response => {
         setPolls(response.data);
         console.log(response.data)
@@ -86,7 +86,7 @@ function PollList() {
   }
 
   const deletePoll = (token) => {
-    axios.delete(`http://localhost:8080/poll/lack/${token}`)
+    axios.delete(`http://localhost:49715/poll/lack/${token}`)
       .then(response => {
         fetchPolls();  // Refresh the polls after a successful delete
       })

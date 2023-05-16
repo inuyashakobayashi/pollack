@@ -22,7 +22,7 @@ function PollUpdate() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/poll/lack/${shareToken}`);
+        const response = await axios.get(`http://localhost:49715/poll/lack/${shareToken}`);
         setTitle(response.data.poll.body.title);
         setDescription(response.data.poll.body.description);
         // map to only include the necessary fields and ensure sequential 'id's
@@ -93,7 +93,7 @@ function PollUpdate() {
     console.log(pollData)
   
     try {
-      const response = await axios.put(`http://localhost:8080/poll/lack/${adminToken}`, pollData);
+      const response = await axios.put(`http://localhost:49715/poll/lack/${adminToken}`, pollData);
       
       if (response.status === 200) {
         setResponse({

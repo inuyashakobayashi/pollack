@@ -26,7 +26,7 @@ app.use("/vote", voteRouter);
 
 
 // PORT
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 49715;
 
 
 //test

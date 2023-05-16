@@ -220,7 +220,7 @@ function AddPoll() {
     };
 
     try {
-      const response = await axios.post('http://localhost:8080/poll/lack', pollData);
+      const response = await axios.post('http://localhost:49715/poll/lack', pollData);
       setResponse({
         admin: { link: response.data.admin.link, value: response.data.admin.value },
         share: { link: response.data.share.link, value: response.data.share.value },
