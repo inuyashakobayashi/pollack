@@ -10,13 +10,15 @@ import Vote from './pages/Vote';
 import PollDetail from './pages/PollDetail'
 import PollUpdate from './pages/PollUpdate';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import NavbarCollapse from 'react-bootstrap/esm/NavbarCollapse';
+//import './css/style.css'
 
 
 function App() {
   return (
     <Router>
       <Header />
-      <Routes>
+      <Routes> 
         <Route path="/" element={<Home />} />
         <Route path='/poll' element={<Poll/>} />
         <Route path='/vote' element={<Vote/>} />

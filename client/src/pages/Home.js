@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import React from 'react';
 import { Button, Container, Card } from 'react-bootstrap';
+import '../css/style.css'
 
 function Home() {
   return (
